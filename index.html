@@ -1,0 +1,556 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Exo+2:wght@300;400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Exo 2',sans-serif;background:transparent;}
+.app{padding:1rem;display:flex;flex-direction:column;gap:1rem;}
+.top-row{display:grid;grid-template-columns:340px 1fr;gap:1rem;align-items:start;}
+.bottom-row{width:100%;}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1.25rem;}
+.card-title{font-family:'Cinzel Decorative',serif;font-size:13px;font-weight:700;color:var(--color-text-primary);margin-bottom:1rem;display:flex;align-items:center;gap:7px;}
+.rarity-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:1rem;}
+.rarity-box{border-radius:var(--border-radius-md);padding:10px;border:1.5px solid;}
+.rarity-ssr{background:#FAEEDA;border-color:#EF9F27;}.rarity-sr{background:#E6F1FB;border-color:#378ADD;}.rarity-r{background:#EEEDFE;border-color:#7F77DD;}.rarity-n{background:#F1EFE8;border-color:#888780;}
+.rarity-box.rate-negative{border-color:#E24B4A!important;background:#FCEBEB!important;}
+.rarity-label{font-size:11px;font-weight:700;letter-spacing:.5px;margin-bottom:4px;}
+.rarity-ssr .rarity-label{color:#BA7517;}.rarity-sr .rarity-label{color:#185FA5;}.rarity-r .rarity-label{color:#534AB7;}.rarity-n .rarity-label{color:#5F5E5A;}
+.rarity-box.rate-negative .rarity-label{color:#A32D2D;}
+.rate-input-wrap{display:flex;align-items:center;gap:3px;}
+.rate-input{width:52px;font-size:15px;font-weight:700;border:none;background:transparent;text-align:right;padding:1px 0;outline:none;color:var(--color-text-primary);font-family:'Exo 2',sans-serif;}
+.rarity-box.rate-negative .rate-input{color:#A32D2D;}
+.rate-unit{font-size:13px;font-weight:500;color:var(--color-text-secondary);}
+.rate-total{font-size:12px;padding:5px 10px;border-radius:var(--border-radius-md);margin-bottom:.6rem;display:inline-flex;align-items:center;gap:5px;}
+.rate-total.ok{background:var(--color-background-success);color:var(--color-text-success);}
+.error-msg{font-size:12px;font-weight:700;color:#A32D2D;background:#FCEBEB;border:1px solid #F09595;padding:6px 10px;border-radius:var(--border-radius-md);margin-bottom:.6rem;display:none;align-items:center;gap:5px;}
+.divider{height:0.5px;background:var(--color-border-tertiary);margin:.9rem 0;}
+.items-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.items-label{font-size:12px;font-weight:600;color:var(--color-text-secondary);}
+.btn-add{font-size:11px;padding:4px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:transparent;cursor:pointer;color:var(--color-text-primary);display:inline-flex;align-items:center;gap:3px;font-family:'Exo 2',sans-serif;transition:background .1s;}
+.btn-add:hover{background:var(--color-background-secondary);}
+.items-scroll{max-height:280px;overflow-y:auto;padding-right:2px;}
+.item-row{margin-bottom:6px;}
+.item-row-inputs{display:grid;grid-template-columns:1fr 76px auto;gap:6px;align-items:center;}
+.item-name-input{font-size:12px;padding:6px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:'Exo 2',sans-serif;outline:none;width:100%;transition:border .15s;}
+.item-name-input:focus{border-color:var(--color-border-primary);}
+.item-name-input.spell-warn{border-color:#F59E0B;background:#FFFBEB;}
+.item-rarity-select{font-size:11px;padding:6px 4px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:'Exo 2',sans-serif;outline:none;cursor:pointer;width:100%;}
+.btn-delete{height:30px;padding:0 9px;display:inline-flex;align-items:center;gap:4px;border-radius:var(--border-radius-md);border:1.5px solid #E24B4A;background:#FCEBEB;cursor:pointer;color:#A32D2D;font-size:11px;font-weight:700;font-family:'Exo 2',sans-serif;white-space:nowrap;transition:background .15s,transform .1s;flex-shrink:0;}
+.btn-delete:hover{background:#F09595;transform:scale(1.04);}.btn-delete:active{transform:scale(0.96);}
+.spell-suggestions{display:none;flex-wrap:wrap;gap:4px;margin-top:3px;padding:4px 6px;background:#FFFBEB;border:1px solid #F59E0B;border-radius:var(--border-radius-md);}
+.spell-suggestions.visible{display:flex;}
+.spell-label{font-size:10px;color:#92400E;font-weight:600;width:100%;margin-bottom:2px;}
+.spell-chip{font-size:11px;padding:2px 8px;border-radius:10px;background:#FEF3C7;border:1px solid #F59E0B;color:#92400E;cursor:pointer;font-family:'Exo 2',sans-serif;}
+.spell-chip:hover{background:#FDE68A;}
+.spell-ignore{font-size:10px;padding:2px 7px;border-radius:10px;background:transparent;border:1px solid #D1D5DB;color:var(--color-text-secondary);cursor:pointer;font-family:'Exo 2',sans-serif;}
+.gacha-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:.6rem;}
+.ctrl-group label{display:block;font-size:11px;color:var(--color-text-secondary);margin-bottom:4px;font-weight:600;}
+.ctrl-group input{width:100%;font-size:14px;font-weight:600;padding:7px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:'Exo 2',sans-serif;outline:none;transition:border .15s;}
+.ctrl-group input:focus{border-color:var(--color-border-primary);}.ctrl-group input.input-error{border-color:#E24B4A;background:#FCEBEB;}
+.ctrl-errors{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:.6rem;}
+.ctrl-error-slot{min-height:0;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);margin-bottom:.6rem;cursor:pointer;user-select:none;transition:background .15s;}
+.toggle-row:hover{background:var(--color-background-tertiary,#f0f0f0);}
+.toggle-left{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--color-text-primary);}
+.badge-free{font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;background:#E6F7E9;border:1px solid #52C472;color:#1B7A35;}
+.badge-pity{font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;background:#F0EEFF;border:1px solid #7F77DD;color:#534AB7;}
+.badge-budget{font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;background:#FFF3E0;border:1px solid #EF9F27;color:#BA7517;}
+.toggle-switch{position:relative;width:36px;height:20px;flex-shrink:0;}
+.toggle-switch input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-slider{position:absolute;inset:0;background:#ccc;border-radius:20px;transition:background .2s;}
+.toggle-slider:before{content:'';position:absolute;width:14px;height:14px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s;}
+.toggle-switch input:checked+.toggle-slider{background:#52C472;}
+.toggle-switch input:checked+.toggle-slider:before{transform:translateX(16px);}
+.toggle-switch.purple input:checked+.toggle-slider{background:#7F77DD;}
+.toggle-switch.gold input:checked+.toggle-slider{background:#EF9F27;}
+.feature-panel{border-radius:var(--border-radius-md);padding:12px;margin-bottom:.6rem;display:none;}
+.feature-panel.open{display:block;}
+.free-roll-panel{background:#F0FAF2;border:1px solid #8FD9A8;}.pity-panel{background:#F5F3FF;border:1px solid #C4BFFF;}.budget-panel{background:#FFFBF0;border:1px solid #FFD580;}
+.panel-title{font-size:11px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:4px;}
+.free-roll-panel .panel-title{color:#1B7A35;}.pity-panel .panel-title{color:#534AB7;}.budget-panel .panel-title{color:#BA7517;}
+.panel-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.panel-hint{font-size:11px;margin-top:7px;padding:5px 9px;border-radius:5px;display:flex;align-items:flex-start;gap:4px;line-height:1.6;}
+.free-roll-hint{color:#2A6B3C;background:#D6F2DF;}.pity-hint{color:#534AB7;background:#EDE9FF;}.budget-result{color:#BA7517;background:#FFE9A0;}
+.panel-errors{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:5px;}
+.progress-bar-card{border-radius:var(--border-radius-md);padding:9px 12px;margin-bottom:.6rem;display:none;}
+.progress-bar-card.visible{display:block;}
+.cumulative-bar{background:#FFF8E6;border:1px solid #EF9F27;}.pity-bar{background:#F5F3FF;border:1px solid #C4BFFF;}
+.pb-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;}
+.pb-label{font-size:11px;font-weight:700;display:flex;align-items:center;gap:4px;}
+.cumulative-bar .pb-label{color:#BA7517;}.pity-bar .pb-label{color:#534AB7;}
+.pb-track{height:7px;border-radius:3px;overflow:hidden;margin-bottom:3px;}
+.cumulative-bar .pb-track{background:#FAEEDA;}.pity-bar .pb-track{background:#EDE9FF;}
+.pb-fill{height:100%;border-radius:3px;transition:width .4s ease;}
+.cumulative-bar .pb-fill{background:linear-gradient(90deg,#EF9F27,#BA7517);}.pity-bar .pb-fill{background:linear-gradient(90deg,#A49CF8,#7F77DD);}
+.pb-sub{font-size:10px;text-align:right;}
+.cumulative-bar .pb-sub{color:#BA7517;}.pity-bar .pb-sub{color:#534AB7;}
+.pb-reset{font-size:10px;padding:2px 7px;border-radius:var(--border-radius-md);border:1px solid;background:transparent;cursor:pointer;font-family:'Exo 2',sans-serif;}
+.cumulative-bar .pb-reset{border-color:#EF9F27;color:#BA7517;}.cumulative-bar .pb-reset:hover{background:#FAEEDA;}
+.pity-bar .pb-reset{border-color:#C4BFFF;color:#534AB7;}.pity-bar .pb-reset:hover{background:#EDE9FF;}
+.cost-preview{font-size:12px;color:var(--color-text-secondary);margin-bottom:.9rem;padding:9px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);line-height:1.9;}
+.cost-preview strong{color:var(--color-text-primary);font-weight:700;}
+.cp-free{color:#1B7A35;font-weight:700;}.cp-pity{color:#534AB7;font-weight:700;}
+.cp-row{display:flex;align-items:center;gap:5px;font-size:12px;flex-wrap:wrap;}
+.cp-divider{height:0.5px;background:var(--color-border-tertiary);margin:4px 0;}
+.preset-row{display:flex;gap:6px;margin-bottom:.8rem;flex-wrap:wrap;}
+.btn-preset{flex:1;min-width:0;padding:7px 4px;border-radius:var(--border-radius-md);border:1.5px solid var(--color-border-secondary);background:var(--color-background-secondary);cursor:pointer;font-size:12px;font-weight:700;color:var(--color-text-primary);font-family:'Exo 2',sans-serif;transition:background .1s,border-color .1s,transform .1s;text-align:center;}
+.btn-preset:hover{background:#FAEEDA;border-color:#EF9F27;color:#BA7517;}.btn-preset:active{transform:scale(0.97);}
+.btn-gacha{width:100%;padding:11px;font-family:'Cinzel Decorative',serif;font-size:13px;font-weight:700;color:#FAEEDA;background:linear-gradient(135deg,#BA7517 0%,#EF9F27 50%,#BA7517 100%);border:none;border-radius:var(--border-radius-md);cursor:pointer;letter-spacing:1px;transition:opacity .15s,transform .1s;margin-bottom:1rem;}
+.btn-gacha:hover{opacity:.9;}.btn-gacha:active{transform:scale(0.99);}.btn-gacha:disabled{opacity:.4;cursor:not-allowed;}
+.results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;}
+.results-title{font-size:12px;font-weight:600;color:var(--color-text-secondary);}
+.results-actions{display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
+.btn-sm{font-size:11px;padding:4px 9px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:transparent;cursor:pointer;color:var(--color-text-secondary);font-family:'Exo 2',sans-serif;transition:background .1s;display:inline-flex;align-items:center;gap:3px;}
+.btn-sm:hover{background:var(--color-background-secondary);}
+.btn-csv{border-color:#0F6E56;color:#0F6E56;background:#E1F5EE;}.btn-csv:hover{background:#9FE1CB;}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:.6rem;}
+.stat-box{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:7px 8px;text-align:center;}
+.stat-box .s-label{font-size:10px;color:var(--color-text-secondary);margin-bottom:2px;}
+.stat-box .s-val{font-size:15px;font-weight:700;color:var(--color-text-primary);}
+.stat-box.ssr .s-val{color:#BA7517;}.stat-box.sr .s-val{color:#185FA5;}.stat-box.r .s-val{color:#534AB7;}
+.stat-box.free-stat .s-label,.stat-box.free-stat .s-val{color:#1B7A35;}
+.results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;max-height:260px;overflow-y:auto;padding-right:3px;}
+.result-item{border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;font-weight:600;border:1.5px solid;animation:pop .18s ease;position:relative;}
+@keyframes pop{0%{transform:scale(0.83);opacity:0;}60%{transform:scale(1.04);}100%{transform:scale(1);opacity:1;}}
+.result-item.ssr{background:#FAEEDA;border-color:#EF9F27;color:#BA7517;}.result-item.sr{background:#E6F1FB;border-color:#378ADD;color:#185FA5;}.result-item.r{background:#EEEDFE;border-color:#7F77DD;color:#534AB7;}.result-item.n{background:#F1EFE8;border-color:#B4B2A9;color:#5F5E5A;}
+.result-item.free-roll-item::after{content:'FREE';position:absolute;top:3px;right:3px;font-size:7px;font-weight:700;background:#52C472;color:#fff;padding:1px 3px;border-radius:3px;}
+.result-item.pity-item::before{content:'PITY';position:absolute;top:3px;left:3px;font-size:7px;font-weight:700;background:#7F77DD;color:#fff;padding:1px 3px;border-radius:3px;}
+.result-item .ri-rarity{font-size:9px;font-weight:700;letter-spacing:.5px;opacity:.7;margin-bottom:2px;}
+.result-item .ri-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.empty-state{text-align:center;color:var(--color-text-secondary);font-size:12px;padding:1.5rem 0;}
+.history-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;}
+.history-label{font-size:13px;font-weight:700;color:var(--color-text-primary);display:flex;align-items:center;gap:5px;}
+.history-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.cumulative-rarity-banner{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;}
+.crb-box{border-radius:var(--border-radius-md);padding:10px 12px;text-align:center;border:1.5px solid;}
+.crb-box.ssr{background:#FAEEDA;border-color:#EF9F27;}.crb-box.sr{background:#E6F1FB;border-color:#378ADD;}.crb-box.r{background:#EEEDFE;border-color:#7F77DD;}.crb-box.n{background:#F1EFE8;border-color:#B4B2A9;}
+.crb-label{font-size:10px;font-weight:700;margin-bottom:3px;}
+.crb-box.ssr .crb-label{color:#BA7517;}.crb-box.sr .crb-label{color:#185FA5;}.crb-box.r .crb-label{color:#534AB7;}.crb-box.n .crb-label{color:#5F5E5A;}
+.crb-val{font-size:22px;font-weight:700;}
+.crb-box.ssr .crb-val{color:#BA7517;}.crb-box.sr .crb-val{color:#185FA5;}.crb-box.r .crb-val{color:#534AB7;}.crb-box.n .crb-val{color:#5F5E5A;}
+.crb-pct{font-size:10px;opacity:.7;margin-top:1px;}
+.total-spent-banner{background:linear-gradient(135deg,#FFF3DC,#FAEEDA);border:1px solid #EF9F27;border-radius:var(--border-radius-md);padding:9px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;}
+.tsb-label{font-size:11px;color:#BA7517;font-weight:700;display:flex;align-items:center;gap:4px;}
+.tsb-val{font-size:17px;font-weight:700;color:#BA7517;}
+.history-grid-outer{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:8px;}
+.history-entry{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden;}
+.history-head{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--color-background-secondary);cursor:pointer;user-select:none;flex-wrap:wrap;gap:3px;}
+.history-head-left{font-size:10px;font-weight:700;color:var(--color-text-primary);}
+.history-head-right{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.hbadge{font-size:10px;font-weight:700;padding:1px 6px;border-radius:16px;border:1px solid;}
+.hbadge.ssr{background:#FAEEDA;border-color:#EF9F27;color:#BA7517;}.hbadge.sr{background:#E6F1FB;border-color:#378ADD;color:#185FA5;}.hbadge.r{background:#EEEDFE;border-color:#7F77DD;color:#534AB7;}.hbadge.n{background:#F1EFE8;border-color:#B4B2A9;color:#5F5E5A;}
+.hbadge.free{background:#E6F7E9;border-color:#52C472;color:#1B7A35;}.hbadge.pity{background:#F0EEFF;border-color:#7F77DD;color:#534AB7;}
+.history-body{padding:8px 10px;border-top:0.5px solid var(--color-border-tertiary);display:none;}
+.history-body.open{display:block;}
+.h-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:4px;max-height:150px;overflow-y:auto;}
+.h-item{border-radius:5px;padding:5px 7px;font-size:10px;font-weight:600;border:1px solid;position:relative;}
+.h-item.ssr{background:#FAEEDA;border-color:#EF9F27;color:#BA7517;}.h-item.sr{background:#E6F1FB;border-color:#378ADD;color:#185FA5;}.h-item.r{background:#EEEDFE;border-color:#7F77DD;color:#534AB7;}.h-item.n{background:#F1EFE8;border-color:#B4B2A9;color:#5F5E5A;}
+.h-item.is-free::after{content:'F';position:absolute;top:2px;right:2px;font-size:6px;font-weight:700;background:#52C472;color:#fff;padding:0 3px;border-radius:2px;}
+.h-item.is-pity::before{content:'P';position:absolute;top:2px;left:2px;font-size:6px;font-weight:700;background:#7F77DD;color:#fff;padding:0 3px;border-radius:2px;}
+.h-item .h-rar{font-size:8px;font-weight:700;opacity:.7;margin-bottom:1px;}
+.h-item .h-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+</style>
+
+<div class="app">
+  <div class="top-row">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-adjustments-horizontal"></i> ตั้งค่าเรทไอเท็ม</div>
+      <div class="rarity-grid">
+        <div class="rarity-box rarity-ssr" id="box-ssr"><div class="rarity-label">⭐⭐⭐⭐ SSR</div><div class="rate-input-wrap"><input class="rate-input" type="number" id="rate-ssr" value="1" step="0.1"/><span class="rate-unit">%</span></div></div>
+        <div class="rarity-box rarity-sr"  id="box-sr"> <div class="rarity-label">⭐⭐⭐ SR</div>  <div class="rate-input-wrap"><input class="rate-input" type="number" id="rate-sr"  value="9" step="0.1"/><span class="rate-unit">%</span></div></div>
+        <div class="rarity-box rarity-r"   id="box-r">  <div class="rarity-label">⭐⭐ R</div>    <div class="rate-input-wrap"><input class="rate-input" type="number" id="rate-r"   value="30" step="0.1"/><span class="rate-unit">%</span></div></div>
+        <div class="rarity-box rarity-n"   id="box-n">  <div class="rarity-label">⭐ N</div>     <div class="rate-input-wrap"><input class="rate-input" type="number" id="rate-n"   value="60" step="0.1"/><span class="rate-unit">%</span></div></div>
+      </div>
+      <div id="rate-total-badge" class="rate-total ok"><i class="ti ti-check"></i> รวม 100%</div>
+      <div id="error-negative" class="error-msg"><i class="ti ti-alert-triangle"></i> เรทต้องไม่ติดลบ</div>
+      <div id="error-sum"      class="error-msg"><i class="ti ti-alert-triangle"></i> ผลรวมต้องเป็น 100% เท่านั้น</div>
+      <div id="error-items"    class="error-msg"><i class="ti ti-alert-triangle"></i> กรุณาใส่ไอเท็มให้ครบทุกเรท</div>
+      <div class="divider"></div>
+      <div class="items-header">
+        <span class="items-label"><i class="ti ti-package"></i> รายการไอเท็ม</span>
+        <button class="btn-add" onclick="addItemRow()"><i class="ti ti-plus"></i> เพิ่ม</button>
+      </div>
+      <div class="items-scroll" id="items-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="ti ti-stars"></i> กาชาจำลอง</div>
+      <div class="gacha-controls">
+        <div class="ctrl-group"><label>จำนวนครั้ง (จ่ายเงิน)</label><input type="number" id="roll-count" value="10" min="1" max="10000" step="1" oninput="validateGacha()"/></div>
+        <div class="ctrl-group"><label>ราคาต่อ 1 ครั้ง (บาท)</label><input type="number" id="roll-cost" value="100" step="1" oninput="validateGacha()"/></div>
+      </div>
+      <div class="ctrl-errors">
+        <div class="ctrl-error-slot"><div id="error-rolls" class="error-msg" style="margin-bottom:0;"><i class="ti ti-alert-triangle"></i> ต้องอย่างน้อย 1</div></div>
+        <div class="ctrl-error-slot"><div id="error-cost"  class="error-msg" style="margin-bottom:0;"><i class="ti ti-alert-triangle"></i> ราคาต้องมากกว่า 0</div></div>
+      </div>
+      <div class="toggle-row" onclick="togglePanel('free-roll-toggle','free-roll-panel')">
+        <div class="toggle-left"><i class="ti ti-gift" style="color:#1B7A35;"></i> ระบบโรลฟรี <span class="badge-free">FREE</span></div>
+        <label class="toggle-switch" onclick="event.stopPropagation()"><input type="checkbox" id="free-roll-toggle" onchange="onFreeRollToggle()"/><span class="toggle-slider"></span></label>
+      </div>
+      <div class="feature-panel free-roll-panel" id="free-roll-panel">
+        <div class="panel-title"><i class="ti ti-gift"></i> ตั้งค่าโรลฟรี</div>
+        <div class="panel-fields">
+          <div class="ctrl-group"><label style="color:#2A6B3C;">ทุกกี่ครั้ง (จ่ายเงิน)</label><input type="number" id="free-every" value="10" min="1" step="1" style="background:#fff;border-color:#8FD9A8;" oninput="validateGacha()"/></div>
+          <div class="ctrl-group"><label style="color:#2A6B3C;">ได้ฟรีกี่ครั้ง</label><input type="number" id="free-bonus" value="1" min="1" step="1" style="background:#fff;border-color:#8FD9A8;" oninput="validateGacha()"/></div>
+        </div>
+        <div class="panel-errors">
+          <div><div id="error-free-every" class="error-msg" style="margin-bottom:0;font-size:11px;"><i class="ti ti-alert-triangle"></i> ต้องอย่างน้อย 1</div></div>
+          <div><div id="error-free-bonus" class="error-msg" style="margin-bottom:0;font-size:11px;"><i class="ti ti-alert-triangle"></i> ต้องอย่างน้อย 1</div></div>
+        </div>
+        <div class="panel-hint free-roll-hint"><i class="ti ti-info-circle" style="flex-shrink:0;"></i><span id="free-hint-text">–</span></div>
+      </div>
+      <div class="progress-bar-card cumulative-bar" id="cumulative-bar">
+        <div class="pb-row"><span class="pb-label"><i class="ti ti-reload"></i> ยอดสะสมโรลจ่ายเงิน</span><button class="pb-reset" onclick="resetCumulativeCounter()">รีเซ็ต</button></div>
+        <div class="pb-track"><div class="pb-fill" id="cum-progress-bar" style="width:0%"></div></div>
+        <div class="pb-sub" id="cum-sub-text"></div>
+      </div>
+      <div class="toggle-row" onclick="togglePanel('pity-toggle','pity-panel')">
+        <div class="toggle-left"><i class="ti ti-shield-star" style="color:#534AB7;"></i> ระบบ Pity <span class="badge-pity">PITY</span></div>
+        <label class="toggle-switch purple" onclick="event.stopPropagation()"><input type="checkbox" id="pity-toggle" onchange="onPityToggle()"/><span class="toggle-slider"></span></label>
+      </div>
+      <div class="feature-panel pity-panel" id="pity-panel">
+        <div class="panel-title"><i class="ti ti-shield-star"></i> ตั้งค่า Pity</div>
+        <div class="panel-fields" style="grid-template-columns:1fr;">
+          <div class="ctrl-group"><label style="color:#534AB7;">จำนวนโรลก่อนรับประกัน SSR</label><input type="number" id="pity-count" value="79" min="1" step="1" style="background:#fff;border-color:#C4BFFF;" oninput="validateGacha()"/></div>
+        </div>
+        <div><div id="error-pity" class="error-msg" style="margin-bottom:0;font-size:11px;margin-top:5px;"><i class="ti ti-alert-triangle"></i> ต้องอย่างน้อย 1</div></div>
+        <div class="panel-hint pity-hint" style="margin-top:7px;"><i class="ti ti-info-circle" style="flex-shrink:0;"></i><span id="pity-hint-text">–</span></div>
+      </div>
+      <div class="progress-bar-card pity-bar" id="pity-bar">
+        <div class="pb-row"><span class="pb-label"><i class="ti ti-shield-star"></i> ตัวนับ Pity (ไม่นับโรลฟรี)</span><button class="pb-reset" onclick="resetPityCounter()">รีเซ็ต</button></div>
+        <div class="pb-track"><div class="pb-fill" id="pity-progress-bar" style="width:0%"></div></div>
+        <div class="pb-sub" id="pity-sub-text"></div>
+      </div>
+      <div class="toggle-row" onclick="togglePanel('budget-toggle','budget-panel')">
+        <div class="toggle-left"><i class="ti ti-calculator" style="color:#BA7517;"></i> คำนวณจากงบประมาณ <span class="badge-budget">BUDGET</span></div>
+        <label class="toggle-switch gold" onclick="event.stopPropagation()"><input type="checkbox" id="budget-toggle" onchange="onBudgetToggle()"/><span class="toggle-slider"></span></label>
+      </div>
+      <div class="feature-panel budget-panel" id="budget-panel">
+        <div class="panel-title"><i class="ti ti-calculator"></i> Monte Carlo Simulation</div>
+        <div class="panel-fields" style="grid-template-columns:1fr;">
+          <div class="ctrl-group"><label style="color:#BA7517;">งบประมาณ (บาท)</label><input type="number" id="budget-amount" value="1000" min="1" step="1" style="background:#fff;border-color:#FFD580;" oninput="runBudgetCalc()"/></div>
+        </div>
+        <div><div id="error-budget" class="error-msg" style="margin-bottom:0;font-size:11px;margin-top:5px;"><i class="ti ti-alert-triangle"></i> งบต้องมากกว่า 0</div></div>
+        <div class="panel-hint budget-result" style="margin-top:7px;flex-direction:column;gap:2px;">
+          <span id="budget-result-text" style="font-size:11px;">–</span>
+        </div>
+      </div>
+      <div class="cost-preview" id="cost-preview"></div>
+      <div class="preset-row">
+        <button class="btn-preset" onclick="doPreset(100)">⚡ 100</button>
+        <button class="btn-preset" onclick="doPreset(500)">⚡ 500</button>
+        <button class="btn-preset" onclick="doPreset(1000)">⚡ 1000</button>
+      </div>
+      <button class="btn-gacha" id="btn-roll" onclick="doGacha()"><i class="ti ti-sparkles"></i> สุ่มกาชา!</button>
+      <div id="results-area" style="display:none;">
+        <div class="results-header">
+          <span class="results-title" id="results-title"></span>
+          <div class="results-actions">
+            <button class="btn-sm btn-csv" onclick="exportCSV(latestResults,latestMeta)"><i class="ti ti-file-spreadsheet"></i> CSV</button>
+            <button class="btn-sm" onclick="clearResults()"><i class="ti ti-trash"></i> ล้างผล</button>
+          </div>
+        </div>
+        <div class="stats-row">
+          <div class="stat-box ssr"><div class="s-label">SSR</div><div class="s-val" id="stat-ssr">0</div></div>
+          <div class="stat-box sr"> <div class="s-label">SR</div> <div class="s-val" id="stat-sr">0</div></div>
+          <div class="stat-box r">  <div class="s-label">R</div>  <div class="s-val" id="stat-r">0</div></div>
+          <div class="stat-box">    <div class="s-label">N</div>  <div class="s-val" id="stat-n">0</div></div>
+        </div>
+        <div id="free-stats-row" class="stats-row" style="display:none;margin-top:-4px;">
+          <div class="stat-box free-stat" style="grid-column:1/3"><div class="s-label">🎁 โรลจ่ายเงิน</div><div class="s-val" id="stat-paid">0</div></div>
+          <div class="stat-box free-stat" style="grid-column:3/5"><div class="s-label">🎁 โรลฟรี</div><div class="s-val" id="stat-free">0</div></div>
+        </div>
+        <div class="results-grid" id="results-grid"></div>
+      </div>
+      <div id="results-empty" class="empty-state"><i class="ti ti-mood-empty" style="font-size:24px;display:block;margin-bottom:5px;"></i>กดสุ่มกาชาเพื่อเริ่มต้น</div>
+    </div>
+  </div>
+
+  <div class="bottom-row" id="history-section" style="display:none;">
+    <div class="card">
+      <div class="history-title-row">
+        <span class="history-label"><i class="ti ti-history"></i> ประวัติ 10 ครั้งล่าสุด</span>
+        <div class="history-actions">
+          <button class="btn-sm btn-csv" onclick="exportAllHistoryCSV()"><i class="ti ti-file-spreadsheet"></i> Export ทั้งหมด CSV</button>
+          <button class="btn-sm" onclick="clearHistory()"><i class="ti ti-trash"></i> ล้างประวัติ</button>
+        </div>
+      </div>
+      <div class="cumulative-rarity-banner">
+        <div class="crb-box ssr"><div class="crb-label">⭐⭐⭐⭐ SSR รวม</div><div class="crb-val" id="crb-ssr">0</div><div class="crb-pct" id="crb-ssr-pct">0%</div></div>
+        <div class="crb-box sr"> <div class="crb-label">⭐⭐⭐ SR รวม</div>  <div class="crb-val" id="crb-sr">0</div> <div class="crb-pct" id="crb-sr-pct">0%</div></div>
+        <div class="crb-box r">  <div class="crb-label">⭐⭐ R รวม</div>    <div class="crb-val" id="crb-r">0</div>  <div class="crb-pct" id="crb-r-pct">0%</div></div>
+        <div class="crb-box n">  <div class="crb-label">⭐ N รวม</div>      <div class="crb-val" id="crb-n">0</div>  <div class="crb-pct" id="crb-n-pct">0%</div></div>
+      </div>
+      <div class="total-spent-banner">
+        <span class="tsb-label"><i class="ti ti-coin"></i> รวมเงินที่ใช้ไปทั้งหมด (ตั้งแต่ล้างประวัติ)</span>
+        <span class="tsb-val" id="total-spent-val">0 บาท</span>
+      </div>
+      <div class="history-grid-outer" id="history-list"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let itemCounter=0;
+const rarities=['SSR','SR','R','N'];
+const defaultItems=[{name:'ดาบมังกร',rarity:'SSR'},{name:'โล่เงิน',rarity:'SR'},{name:'คทาไม้',rarity:'R'},{name:'ยาสมุนไพร',rarity:'N'}];
+let rollHistory=[],latestResults=[],latestMeta={};
+let cumulativePaidRolls=0,pityCounter=0,totalSpent=0;
+let totalRarityCounts={SSR:0,SR:0,R:0,N:0},totalRollsEver=0;
+const ignoredSpell=new Set();
+const SE=id=>document.getElementById(id);
+function showErr(id,show){const el=SE(id);if(el)el.style.display=show?'flex':'none';}
+function isOn(id){return SE(id).checked;}
+function fmtUI(n){return n.toLocaleString('th-TH');}
+
+// CSV helpers — NO locale formatting, NO commas in values, quote everything with units
+// "count (X.XX%)" format — no comma, no minus, safe for Excel
+function csvRarityCell(count, total){
+  const pct = total > 0 ? (count/total*100).toFixed(2) : '0.00';
+  return `"${count} (${pct}%)"`;
+}
+function csvBaht(n){ return `"${n} บาท"`; }
+
+/* ── spell checker ── */
+function hasRepeatedChars(s){return/(.)\1{3,}/.test(s);}
+function hasMixedScriptMidWord(s){return s.split(/\s+/).some(w=>/[\u0E00-\u0E7F]/.test(w)&&/[a-zA-Z]/.test(w));}
+function isAllSymbols(s){return s.length>0&&/^[^a-zA-Z\u0E00-\u0E7F0-9]+$/.test(s);}
+function hasExcessiveCaps(s){const l=s.replace(/[^a-zA-Z]/g,'');if(l.length<3)return false;return s.replace(/[^A-Z]/g,'').length/l.length>0.7&&l.length>3;}
+const misspell={swrod:'sword',sheild:'shield',sord:'sword',potoin:'potion',potiion:'potion',arow:'arrow',helemt:'helmet',helmat:'helmet',armur:'armor',bowe:'bow',dregon:'dragon',magik:'magic',mgaic:'magic',crystl:'crystal',crystall:'crystal',scrolll:'scroll',wadn:'wand',wandd:'wand',knofe:'knife',kinfe:'knife',staffe:'staff',speere:'spear',speear:'spear'};
+function checkSpelling(text){
+  if(!text||text.trim().length<2)return{hasIssue:false,suggestions:[],reason:''};
+  const t=text.trim();
+  if(hasRepeatedChars(t))return{hasIssue:true,suggestions:[],reason:'มีอักษรซ้ำผิดปกติ'};
+  if(isAllSymbols(t))return{hasIssue:true,suggestions:[],reason:'ชื่อเป็นสัญลักษณ์ทั้งหมด'};
+  if(hasMixedScriptMidWord(t))return{hasIssue:true,suggestions:[],reason:'ผสมไทย-อังกฤษในคำเดียว'};
+  if(hasExcessiveCaps(t))return{hasIssue:true,suggestions:[],reason:'ตัวพิมพ์ใหญ่มากเกินไป'};
+  const suggs=t.toLowerCase().split(/\s+/).filter(w=>misspell[w]).map(w=>misspell[w]);
+  if(suggs.length)return{hasIssue:true,suggestions:suggs,reason:'สะกดผิด (ภาษาอังกฤษ)'};
+  return{hasIssue:false,suggestions:[],reason:''};
+}
+function updateSpellUI(rowId,input){
+  if(ignoredSpell.has(rowId)){input.classList.remove('spell-warn');const sb=SE('spell-'+rowId);if(sb)sb.classList.remove('visible');return;}
+  const{hasIssue,suggestions,reason}=checkSpelling(input.value.trim());
+  const sb=SE('spell-'+rowId);
+  if(hasIssue){input.classList.add('spell-warn');if(sb){sb.classList.add('visible');sb.querySelector('.spell-label').textContent='⚠ '+reason;const chips=sb.querySelector('.spell-chips');chips.innerHTML='';suggestions.forEach(s=>{const c=document.createElement('button');c.className='spell-chip';c.textContent=s;c.onclick=()=>{input.value=s;input.classList.remove('spell-warn');sb.classList.remove('visible');validate();};chips.appendChild(c);});}}
+  else{input.classList.remove('spell-warn');if(sb)sb.classList.remove('visible');}
+}
+function addItemRow(name='',rarity='R'){
+  itemCounter++;const id='item-'+itemCounter;const div=document.createElement('div');
+  div.className='item-row';div.id=id;
+  div.innerHTML=`<div class="item-row-inputs">
+      <input class="item-name-input" type="text" placeholder="ชื่อไอเท็ม (ไทย/Eng/123)" value="${name}" id="inp-${id}" oninput="onItemInput('${id}')"/>
+      <select class="item-rarity-select" onchange="validate()">${rarities.map(r=>`<option value="${r}" ${r===rarity?'selected':''}>${r}</option>`).join('')}</select>
+      <button class="btn-delete" onclick="removeItem('${id}')"><i class="ti ti-trash"></i> Del</button>
+    </div>
+    <div class="spell-suggestions" id="spell-${id}"><span class="spell-label"></span><span class="spell-chips"></span><button class="spell-ignore" onclick="ignoreSpell('${id}')">ไม่ต้องแจ้งเตือน</button></div>`;
+  SE('items-list').appendChild(div);if(name)updateSpellUI(id,SE('inp-'+id));validate();
+}
+function onItemInput(id){const inp=SE('inp-'+id);ignoredSpell.delete(id);updateSpellUI(id,inp);validate();}
+function ignoreSpell(id){ignoredSpell.add(id);const inp=SE('inp-'+id);if(inp){inp.classList.remove('spell-warn');const sb=SE('spell-'+id);if(sb)sb.classList.remove('visible');}}
+function removeItem(id){const el=SE(id);if(el)el.remove();ignoredSpell.delete(id);validate();}
+function getItems(){return Array.from(document.querySelectorAll('#items-list .item-row')).map(r=>({name:r.querySelector('.item-name-input').value.trim(),rarity:r.querySelector('.item-rarity-select').value})).filter(it=>it.name);}
+function getRates(){return{SSR:parseFloat(SE('rate-ssr').value),SR:parseFloat(SE('rate-sr').value),R:parseFloat(SE('rate-r').value),N:parseFloat(SE('rate-n').value)};}
+function validate(){
+  const rates=getRates();const hasNeg=rarities.some(r=>isNaN(rates[r])||rates[r]<0);
+  rarities.forEach(r=>SE('box-'+r.toLowerCase()).classList.toggle('rate-negative',isNaN(rates[r])||rates[r]<0));
+  showErr('error-negative',hasNeg);
+  const total=+(rarities.reduce((s,r)=>s+Math.max(0,rates[r]||0),0)).toFixed(4);
+  const badge=SE('rate-total-badge');const rateOk=!hasNeg&&Math.abs(total-100)<=0.001;
+  if(!hasNeg){if(rateOk){badge.style.cssText='display:inline-flex;align-items:center;gap:5px;';badge.innerHTML=`<i class="ti ti-check"></i> รวม ${total.toFixed(1)}%`;showErr('error-sum',false);}else{badge.style.display='none';showErr('error-sum',true);}}
+  else{badge.style.display='none';showErr('error-sum',false);}
+  const items=getItems();const missing=rarities.some(r=>(rates[r]||0)>0&&!items.some(it=>it.rarity===r));
+  showErr('error-items',missing&&!hasNeg);refreshBtn();return rateOk&&!missing;
+}
+function togglePanel(tid,pid){const cb=SE(tid);cb.checked=!cb.checked;cb.dispatchEvent(new Event('change'));}
+function onFreeRollToggle(){SE('free-roll-panel').classList.toggle('open',isOn('free-roll-toggle'));updateCumulativeBar();validateGacha();}
+function onPityToggle(){SE('pity-panel').classList.toggle('open',isOn('pity-toggle'));updatePityBar();validateGacha();}
+function onBudgetToggle(){SE('budget-panel').classList.toggle('open',isOn('budget-toggle'));if(isOn('budget-toggle'))runBudgetCalc();}
+function getFP(){return{every:parseInt(SE('free-every').value),bonus:parseInt(SE('free-bonus').value)};}
+function getPP(){return{count:parseInt(SE('pity-count').value)};}
+function calcFreeRolls(prev,paid,every,bonus){if(!every||every<1||!bonus||bonus<1)return{freeRolls:0,newCumulative:prev+paid};const after=prev+paid;return{freeRolls:(Math.floor(after/every)-Math.floor(prev/every))*bonus,newCumulative:after};}
+function updateCumulativeBar(){
+  const bar=SE('cumulative-bar');if(!isOn('free-roll-toggle')){bar.classList.remove('visible');return;}
+  const{every,bonus}=getFP();if(isNaN(every)||every<1||isNaN(bonus)||bonus<1){bar.classList.remove('visible');return;}
+  bar.classList.add('visible');const prog=cumulativePaidRolls%every;
+  SE('cum-progress-bar').style.width=(prog/every*100)+'%';
+  SE('cum-sub-text').textContent=`สะสม ${cumulativePaidRolls} · รอบ ${prog}/${every} · อีก ${every-prog} ครั้งได้ฟรี ${bonus}`;
+}
+function resetCumulativeCounter(){cumulativePaidRolls=0;updateCumulativeBar();validateGacha();}
+function updatePityBar(){
+  const bar=SE('pity-bar');if(!isOn('pity-toggle')){bar.classList.remove('visible');return;}
+  const{count}=getPP();if(isNaN(count)||count<1){bar.classList.remove('visible');return;}
+  bar.classList.add('visible');
+  SE('pity-progress-bar').style.width=Math.min(pityCounter/count*100,100)+'%';
+  SE('pity-sub-text').textContent=`Pity ${pityCounter}/${count} · อีก ${Math.max(0,count-pityCounter)} ครั้งได้ SSR รับประกัน`;
+}
+function resetPityCounter(){pityCounter=0;updatePityBar();}
+function validateGacha(){
+  const rolls=parseFloat(SE('roll-count').value),cost=parseFloat(SE('roll-cost').value);
+  const rE=isNaN(rolls)||rolls<1,cE=isNaN(cost)||cost<=0;
+  showErr('error-rolls',rE);showErr('error-cost',cE);
+  SE('roll-count').classList.toggle('input-error',rE);SE('roll-cost').classList.toggle('input-error',cE);
+  let freeOk=true;
+  if(isOn('free-roll-toggle')){const{every,bonus}=getFP();const eE=isNaN(every)||every<1,bE=isNaN(bonus)||bonus<1;showErr('error-free-every',eE);showErr('error-free-bonus',bE);SE('free-every').classList.toggle('input-error',eE);SE('free-bonus').classList.toggle('input-error',bE);freeOk=!eE&&!bE;
+    if(freeOk&&!rE){const p=Math.floor(rolls);const{freeRolls,newCumulative}=calcFreeRolls(cumulativePaidRolls,p,...Object.values(getFP()));SE('free-hint-text').innerHTML=`สะสม <b>${cumulativePaidRolls}</b>+<b>${p}</b>=<b>${newCumulative}</b> · ฟรี <b style="color:#1B7A35">${freeRolls}</b> · รวม <b>${p+freeRolls}</b>`;}
+    updateCumulativeBar();}else{showErr('error-free-every',false);showErr('error-free-bonus',false);}
+  let pityOk=true;
+  if(isOn('pity-toggle')){const{count}=getPP();const pE=isNaN(count)||count<1;showErr('error-pity',pE);SE('pity-count').classList.toggle('input-error',pE);pityOk=!pE;if(!pE)SE('pity-hint-text').textContent=`ครบ ${count} ครั้งไม่ได้ SSR → โรลที่ ${count+1} ได้ SSR แน่นอน`;updatePityBar();}else showErr('error-pity',false);
+  if(isOn('budget-toggle'))runBudgetCalc();
+  updateCostPreview();refreshBtn();return!rE&&!cE&&freeOk&&pityOk;
+}
+function refreshBtn(){
+  const rates=getRates();const hasNeg=rarities.some(r=>isNaN(rates[r])||rates[r]<0);
+  const total=+(rarities.reduce((s,r)=>s+Math.max(0,rates[r]||0),0)).toFixed(4);
+  const rateOk=!hasNeg&&Math.abs(total-100)<=0.001;
+  const items=getItems();const missing=rarities.some(r=>(rates[r]||0)>0&&!items.some(it=>it.rarity===r));
+  const rolls=parseFloat(SE('roll-count').value),cost=parseFloat(SE('roll-cost').value);
+  let fOk=true;if(isOn('free-roll-toggle')){const{every,bonus}=getFP();fOk=!isNaN(every)&&every>=1&&!isNaN(bonus)&&bonus>=1;}
+  let pOk=true;if(isOn('pity-toggle')){const{count}=getPP();pOk=!isNaN(count)&&count>=1;}
+  SE('btn-roll').disabled=!(rateOk&&!missing&&!isNaN(rolls)&&rolls>=1&&!isNaN(cost)&&cost>0&&fOk&&pOk);
+}
+function updateCostPreview(){
+  const rolls=Math.max(0,parseFloat(SE('roll-count').value)||0),cost=parseFloat(SE('roll-cost').value)||0;
+  const cp=SE('cost-preview');
+  if(isOn('free-roll-toggle')){const{every,bonus}=getFP();if(!isNaN(every)&&every>=1&&!isNaN(bonus)&&bonus>=1&&rolls>0){const p=Math.floor(rolls);const{freeRolls}=calcFreeRolls(cumulativePaidRolls,p,every,bonus);
+    cp.innerHTML=`<div class="cp-row"><i class="ti ti-coin" style="font-size:13px;"></i> จ่ายเงิน <strong>${fmtUI(p)}</strong> × ${fmtUI(cost)} = <strong>${fmtUI(p*cost)} บาท</strong></div>
+      <div class="cp-row"><i class="ti ti-gift" style="font-size:13px;color:#1B7A35;"></i> ฟรี <span class="cp-free">+${freeRolls}</span>${isOn('pity-toggle')?` <i class="ti ti-shield-star" style="font-size:11px;color:#534AB7;"></i><span class="cp-pity">Pity ${pityCounter}/${SE('pity-count').value||'?'}</span>`:''}</div>
+      <div class="cp-divider"></div>
+      <div class="cp-row"><i class="ti ti-trophy" style="font-size:13px;color:#BA7517;"></i> รวม <strong>${fmtUI(p+freeRolls)}</strong> ครั้ง · <strong>${fmtUI(p*cost)} บาท</strong></div>`;return;}}
+  cp.innerHTML=`รวม: <strong>${fmtUI(Math.floor(rolls)*cost)} บาท</strong> (${fmtUI(Math.floor(rolls))} × ${fmtUI(cost)} บาท)${isOn('pity-toggle')?` <span class="cp-pity" style="font-size:11px;">· Pity: ${pityCounter}/${SE('pity-count').value||'?'}</span>`:''}`;
+}
+function runBudgetCalc(){
+  const budget=parseFloat(SE('budget-amount').value),cost=parseFloat(SE('roll-cost').value);
+  const resEl=SE('budget-result-text');
+  if(isNaN(budget)||budget<=0){showErr('error-budget',true);resEl.textContent='–';return;}showErr('error-budget',false);
+  if(isNaN(cost)||cost<=0){resEl.textContent='กรุณาตั้งราคาต่อครั้งก่อน';return;}
+  const rates=getRates();const total=+(rarities.reduce((s,r)=>s+Math.max(0,rates[r]||0),0)).toFixed(4);
+  if(Math.abs(total-100)>0.001){resEl.textContent='กรุณาตั้งเรทให้รวม 100%';return;}
+  const paidRolls=Math.floor(budget/cost);if(paidRolls<1){resEl.textContent='งบไม่เพียงพอ';return;}
+  let freeR=0;if(isOn('free-roll-toggle')){const{every,bonus}=getFP();if(!isNaN(every)&&every>=1&&!isNaN(bonus)&&bonus>=1)freeR=calcFreeRolls(cumulativePaidRolls,paidRolls,every,bonus).freeRolls;}
+  const totalRolls=paidRolls+freeR;
+  const SIMS=5000;const ssrRate=(rates.SSR||0)/100,srRate=(rates.SR||0)/100;
+  const pityOn=isOn('pity-toggle');const{count:pityCount}=getPP();
+  let ssrTotal=0,srTotal=0;
+  for(let s=0;s<SIMS;s++){let sc=0,src=0,pc=pityCounter;for(let i=0;i<totalRolls;i++){const isFree=i>=paidRolls;let gotSSR=false;if(pityOn&&!isFree&&pc>=pityCount){sc++;pc=0;gotSSR=true;continue;}const r=Math.random();if(r<ssrRate){sc++;if(!isFree)pc=0;gotSSR=true;}else if(r<ssrRate+srRate)src++;if(!isFree&&!gotSSR)pc++;}ssrTotal+=sc;srTotal+=src;}
+  const avgSSR=(ssrTotal/SIMS).toFixed(2),avgSR=(srTotal/SIMS).toFixed(2);
+  const pSSR=(ssrTotal/SIMS/totalRolls*100).toFixed(2),pSR=(srTotal/SIMS/totalRolls*100).toFixed(2);
+  const atLeast1=Math.round((1-Math.pow(1-ssrRate,totalRolls))*10000)/100;
+  resEl.innerHTML=`<b>${fmtUI(budget)} บาท</b> → จ่าย <b>${paidRolls}</b>+ฟรี <b>${freeR}</b>=<b>${totalRolls}</b> ครั้ง<br>🌟 SSR เฉลี่ย <b>${avgSSR}</b> ชิ้น (${pSSR}%) | ≥1 ชิ้น: <b>${atLeast1}%</b><br>⭐ SR เฉลี่ย <b>${avgSR}</b> ชิ้น (${pSR}%)${pityOn?`<br>🛡 Pity ${pityCount} รวมแล้ว`:''}`;
+}
+function pickRarity(rates,pityCtr,pityOn,pityCount){
+  if(pityOn&&pityCtr>=pityCount)return{rarity:'SSR',isPity:true};
+  const rand=Math.random()*100;let cum=0;for(const r of rarities){cum+=rates[r];if(rand<cum)return{rarity:r,isPity:false};}return{rarity:'N',isPity:false};
+}
+function buildSeq(paidRolls,freeOn,every,bonus){
+  if(!freeOn)return Array(paidRolls).fill(0).map(()=>({isFree:false}));
+  const seq=[],startCum=cumulativePaidRolls-paidRolls;let cum=startCum;
+  for(let i=0;i<paidRolls;i++){seq.push({isFree:false});cum++;if(cum%every===0)for(let b=0;b<bonus;b++)seq.push({isFree:true});}
+  return seq;
+}
+function doPreset(n){SE('roll-count').value=n;validateGacha();doGacha();}
+function doGacha(){
+  if(!validate()||!validateGacha())return;
+  const paidRolls=Math.max(1,Math.min(10000,parseInt(SE('roll-count').value))),cost=parseFloat(SE('roll-cost').value);
+  const rates=getRates();const items=getItems();const byRarity={};rarities.forEach(r=>{byRarity[r]=items.filter(it=>it.rarity===r);});
+  const freeOn=isOn('free-roll-toggle'),pityOn=isOn('pity-toggle');const{count:pityCount}=getPP();
+  let freeRolls=0;if(freeOn){const{every,bonus}=getFP();const res=calcFreeRolls(cumulativePaidRolls,paidRolls,every,bonus);freeRolls=res.freeRolls;cumulativePaidRolls=res.newCumulative;}
+  const seq=freeOn?buildSeq(paidRolls,true,...Object.values(getFP())):buildSeq(paidRolls,false);
+  const counts={SSR:0,SR:0,R:0,N:0};let pityCtr=pityCounter,pityHits=0;
+  const results=seq.map(s=>{const{rarity,isPity}=pickRarity(rates,s.isFree?99999:pityCtr,pityOn&&!s.isFree,pityCount);counts[rarity]++;if(!s.isFree){if(rarity==='SSR'){pityCtr=0;if(isPity)pityHits++;}else pityCtr++;}const pool=byRarity[rarity];return{name:pool[Math.floor(Math.random()*pool.length)].name,rarity,isFree:s.isFree,isPity};});
+  pityCounter=pityCtr;
+  latestResults=results;latestMeta={rolls:paidRolls,totalRolls:results.length,freeRolls,cost,counts,ts:nowStr(),freeOn,pityOn,pityHits,cumulativeAfter:cumulativePaidRolls};
+  ['ssr','sr','r','n'].forEach(r=>SE('stat-'+r).textContent=counts[r.toUpperCase()]);
+  const fsr=SE('free-stats-row');if(freeOn){fsr.style.display='grid';SE('stat-paid').textContent=fmtUI(paidRolls);SE('stat-free').textContent=fmtUI(freeRolls);}else fsr.style.display='none';
+  const tF=freeOn?` <span style="color:#1B7A35;font-size:11px;">(+${freeRolls}ฟรี)</span>`:'',tP=pityOn&&pityHits>0?` <span style="color:#534AB7;font-size:11px;">[Pity×${pityHits}]</span>`:'';
+  SE('results-title').innerHTML=`รวม ${fmtUI(results.length)} ครั้ง${tF}${tP} · <strong>${fmtUI(paidRolls*cost)} บาท</strong>`;
+  const grid=SE('results-grid');grid.innerHTML='';
+  results.slice(0,500).forEach(res=>{const d=document.createElement('div');d.className=`result-item ${res.rarity.toLowerCase()}${res.isFree?' free-roll-item':''}${res.isPity?' pity-item':''}`;d.innerHTML=`<div class="ri-rarity">${res.rarity}</div><div class="ri-name">${res.name}</div>`;grid.appendChild(d);});
+  if(results.length>500){const note=document.createElement('div');note.style.cssText='grid-column:1/-1;text-align:center;font-size:11px;color:var(--color-text-secondary);padding:6px 0;';note.textContent=`แสดง 500 จาก ${fmtUI(results.length)}`;grid.appendChild(note);}
+  SE('results-area').style.display='block';SE('results-empty').style.display='none';
+  updatePityBar();updateCumulativeBar();
+  const thisCost=paidRolls*cost;totalSpent+=thisCost;
+  rarities.forEach(r=>{totalRarityCounts[r]+=counts[r];});totalRollsEver+=results.length;
+  rollHistory.unshift({results,rolls:paidRolls,totalRolls:results.length,freeRolls,cost,counts,ts:nowStr(),freeOn,pityOn,pityHits,cumulativeAfter:cumulativePaidRolls,thisCost});
+  if(rollHistory.length>10)rollHistory=rollHistory.slice(0,10);
+  renderHistory();
+}
+function updateCumulativeRarityBanner(){
+  const total=totalRollsEver||1;
+  rarities.forEach(r=>{const rL=r.toLowerCase();SE('crb-'+rL).textContent=totalRarityCounts[r].toLocaleString();SE('crb-'+rL+'-pct').textContent=(totalRarityCounts[r]/total*100).toFixed(2)+'%';});
+}
+function renderHistory(){
+  const section=SE('history-section'),list=SE('history-list');
+  if(!rollHistory.length){section.style.display='none';return;}
+  section.style.display='block';updateCumulativeRarityBanner();
+  SE('total-spent-val').textContent=fmtUI(totalSpent)+' บาท';
+  list.innerHTML='';
+  rollHistory.forEach((entry,idx)=>{
+    const bodyId='hbody-'+idx;const div=document.createElement('div');div.className='history-entry';
+    const fL=entry.freeOn?` +${entry.freeRolls}ฟรี=${entry.totalRolls}รวม`:'',pL=entry.pityOn&&entry.pityHits>0?` [Pity×${entry.pityHits}]`:'';
+    div.innerHTML=`<div class="history-head" onclick="toggleHistory('${bodyId}')">
+        <span class="history-head-left">#${rollHistory.length-idx} · ${entry.ts} · จ่าย ${entry.rolls}${fL}${pL} · <b>${fmtUI(entry.thisCost)} บาท</b></span>
+        <div class="history-head-right">
+          ${entry.counts.SSR>0?`<span class="hbadge ssr">SSR×${entry.counts.SSR}</span>`:''}${entry.counts.SR>0?`<span class="hbadge sr">SR×${entry.counts.SR}</span>`:''}${entry.counts.R>0?`<span class="hbadge r">R×${entry.counts.R}</span>`:''}${entry.counts.N>0?`<span class="hbadge n">N×${entry.counts.N}</span>`:''}${entry.freeOn&&entry.freeRolls>0?`<span class="hbadge free">FREE×${entry.freeRolls}</span>`:''}${entry.pityOn&&entry.pityHits>0?`<span class="hbadge pity">PITY×${entry.pityHits}</span>`:''}
+          <div style="display:flex;gap:3px;align-items:center;">
+            <button class="btn-sm btn-csv" onclick="event.stopPropagation();exportCSV(rollHistory[${idx}].results,rollHistory[${idx}])" style="padding:2px 7px;font-size:10px;"><i class="ti ti-file-spreadsheet"></i>CSV</button>
+            <i class="ti ti-chevron-down" id="chev-${bodyId}" style="font-size:13px;color:var(--color-text-secondary);transition:transform .2s;"></i>
+          </div>
+        </div>
+      </div>
+      <div class="history-body" id="${bodyId}">
+        <div class="h-grid">${entry.results.slice(0,200).map(r=>`<div class="h-item ${r.rarity.toLowerCase()}${r.isFree?' is-free':''}${r.isPity?' is-pity':''}"><div class="h-rar">${r.rarity}</div><div class="h-name">${r.name}</div></div>`).join('')}${entry.results.length>200?`<div style="grid-column:1/-1;text-align:center;font-size:10px;color:var(--color-text-secondary);padding:3px;">...แสดง 200 จาก ${entry.results.length}</div>`:''}</div>
+      </div>`;
+    list.appendChild(div);
+  });
+}
+function toggleHistory(bodyId){const body=SE(bodyId),chev=SE('chev-'+bodyId);const open=body.classList.toggle('open');if(chev)chev.style.transform=open?'rotate(180deg)':'';}
+function clearHistory(){rollHistory=[];cumulativePaidRolls=0;pityCounter=0;totalSpent=0;totalRarityCounts={SSR:0,SR:0,R:0,N:0};totalRollsEver=0;updateCumulativeBar();updatePityBar();validateGacha();renderHistory();}
+function clearResults(){SE('results-grid').innerHTML='';SE('results-area').style.display='none';SE('results-empty').style.display='block';}
+
+function exportCSV(results,meta){
+  const bom='\uFEFF';
+  const total=results.length;
+  const c=meta.counts;
+  const header='ลำดับ,ชื่อไอเท็ม,ระดับความหายาก,ประเภทโรล,Pity\n';
+  const rows=results.map((r,i)=>`${i+1},"${r.name}",${r.rarity},${r.isFree?'ฟรี':'จ่ายเงิน'},${r.isPity?'ใช่':'ไม่'}`).join('\n');
+  const summary=[
+    '','สรุป',
+    `SSR,${csvRarityCell(c.SSR,total)}`,
+    `SR,${csvRarityCell(c.SR,total)}`,
+    `R,${csvRarityCell(c.R,total)}`,
+    `N,${csvRarityCell(c.N,total)}`,
+    `โรลจ่ายเงิน,${meta.rolls}`,
+    `โรลฟรี,${meta.freeRolls||0}`,
+    `รวมครั้ง,${total}`,
+    `ค่าใช้จ่าย,${csvBaht(meta.rolls*meta.cost)}`,
+  ].join('\n');
+  dlCSV(bom+header+rows+summary,`gacha_${(meta.ts||'').replace(/[/:, ]/g,'_')}.csv`);
+}
+
+function exportAllHistoryCSV(){
+  if(!rollHistory.length)return;
+  const bom='\uFEFF';
+  const te=totalRollsEver||1;
+  let csv='ประวัติทั้งหมด\n';
+  csv+=`รวมเงินทั้งหมด,${csvBaht(totalSpent)}\n`;
+  csv+=`รวม SSR,${csvRarityCell(totalRarityCounts.SSR,te)}\n`;
+  csv+=`รวม SR,${csvRarityCell(totalRarityCounts.SR,te)}\n`;
+  csv+=`รวม R,${csvRarityCell(totalRarityCounts.R,te)}\n`;
+  csv+=`รวม N,${csvRarityCell(totalRarityCounts.N,te)}\n\n`;
+  rollHistory.forEach((entry,idx)=>{
+    const et=entry.totalRolls;
+    csv+=`=== ครั้งที่ ${rollHistory.length-idx} | ${entry.ts} | จ่าย ${entry.rolls} | ฟรี ${entry.freeRolls||0} | รวม ${et} | ค่าใช้จ่าย ${entry.thisCost} บาท ===\n`;
+    csv+=`ลำดับ,ชื่อไอเท็ม,ระดับความหายาก,ประเภทโรล,Pity\n`;
+    csv+=entry.results.map((r,i)=>`${i+1},"${r.name}",${r.rarity},${r.isFree?'ฟรี':'จ่ายเงิน'},${r.isPity?'ใช่':'ไม่'}`).join('\n');
+    csv+=`\nSSR: ${csvRarityCell(entry.counts.SSR,et)} | SR: ${csvRarityCell(entry.counts.SR,et)} | R: ${csvRarityCell(entry.counts.R,et)} | N: ${csvRarityCell(entry.counts.N,et)}\n\n`;
+  });
+  dlCSV(bom+csv,`gacha_all_${nowStr().replace(/[/:, ]/g,'_')}.csv`);
+}
+
+function dlCSV(content,filename){const blob=new Blob([content],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
+function nowStr(){return new Date().toLocaleString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'});}
+
+document.querySelectorAll('.rate-input').forEach(el=>el.addEventListener('input',validate));
+defaultItems.forEach(it=>addItemRow(it.name,it.rarity));
+updateCostPreview();
+</script>
